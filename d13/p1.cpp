@@ -2,10 +2,11 @@
 #include <fstream>
 #include <vector>
 #include <boost/algorithm/string.hpp>
+#include <boost/container_hash/hash.hpp>
 #include <boost/multiprecision/cpp_int.hpp>
 #include <string>
-#include <array>
 #include <queue>
+#include <unordered_map>
 
 using namespace std;
 using namespace boost::multiprecision;
@@ -171,14 +172,34 @@ int main() {
 
     queue<cpp_int> input;
     queue<cpp_int> output;
-    input.push(2);
-    while (!computer.isHalted()) {
-        computer.step(input, output);
-    }
+	unordered_map<pair<int, int>, int, boost::hash<pair<int, int>>> board;
+	int maxx = -999;
+	int maxy = -999;
+	int minx = 999;
+	int miny = 999;
+	int count = 0;
+	while (!computer.isHalted()) {
+		computer.step(input, output);
+	}
 
-    while (!output.empty()) {
-        cout << output.front() << "\n";
-        output.pop();
-    }
-    cout << endl;
+	while (!output.empty()) {
+		int x = output.front().convert_to<int>();
+		output.pop();
+		int y = output.front().convert_to<int>();
+		output.pop();
+		int tile = output.front().convert_to<int>();
+		output.pop();
+		if (board[{x, y}] == 2)
+			count--;
+		board[{x, y}] = tile;
+		if (tile == 2)
+			count++;
+		maxx = max(x, maxx);
+		maxy = max(y, maxy);
+		minx = min(x, minx);
+		miny = min(y, miny);
+	}
+	cout << count << endl;
+	cout << maxx << " " << maxy << endl;
+	cout << minx << " " << miny << endl;
 }

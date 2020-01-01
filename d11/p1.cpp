@@ -2,10 +2,11 @@
 #include <fstream>
 #include <vector>
 #include <boost/algorithm/string.hpp>
+#include <boost/container_hash/hash.hpp>
 #include <boost/multiprecision/cpp_int.hpp>
 #include <string>
-#include <array>
 #include <queue>
+#include <unordered_map>
 
 using namespace std;
 using namespace boost::multiprecision;
@@ -169,16 +170,45 @@ int main() {
     IntcodeComputer computer;
     computer.setCode(codes);
 
+	unordered_map<pair<int, int>, int, boost::hash<pair<int, int>>> board;
+
     queue<cpp_int> input;
     queue<cpp_int> output;
-    input.push(2);
+	pair<int, int> position = make_pair<int, int>(0, 0);
+	pair<int, int> direction = make_pair<int, int>(0, 1);
+	input.push(0);
     while (!computer.isHalted()) {
         computer.step(input, output);
+		while (output.size() >= 2) {
+			int colorOut = output.front().convert_to<int>();
+			output.pop();
+			switch (colorOut) {
+			case 0:
+				board[position] = 0;
+				break;
+			case 1:
+				board[position] = 1;
+				break;
+			}
+			int dirOut = output.front().convert_to<int>();
+			output.pop();
+			int x = direction.first;
+			int y = direction.second;
+			switch (dirOut) {
+			case 0:
+				direction.first = -y;
+				direction.second = x;
+				break;
+			case 1:
+				direction.first = y;
+				direction.second = -x;
+				break;
+			}
+			position.first += direction.first;
+			position.second += direction.second;
+			input.push(board.count(position) ? board[position] : 0);
+		}
     }
-
-    while (!output.empty()) {
-        cout << output.front() << "\n";
-        output.pop();
-    }
+	cout << board.size() << endl;
     cout << endl;
 }
